@@ -2,6 +2,7 @@ import { makeWASocket, DisconnectReason, useMultiFileAuthState } from '@whiskeys
 import { Boom } from '@hapi/boom';
 import axios from 'axios';
 import qr from 'qrcode-terminal';
+import * as cheerio from 'cheerio';
 
 async function startBot() {
     const { state, saveCreds } = await useMultiFileAuthState('./auth_info');
@@ -38,21 +39,34 @@ async function startBot() {
         if (!msg.message) return;
 
         const text = msg.message.conversation || '';
-        console.log('Received message:', text);
+        console.log('Pesan diterima:', text);
+
+        // Pastikan pesan dimulai dengan '/'
+        if (!text.startsWith('/')) {
+            return; // Abaikan pesan tanpa tanda '/'
+        }
 
         // Gunakan switch untuk menangani pesan
         switch (true) {
-            case text.startsWith('/getip'): {
-                const ip = text.split(' ')[1]; // Ambil IP setelah /getip
+            case text.startsWith('/menu'): {
+                const menuMessage = `
+                *Menu Fitur Bot:*
+                /ipwhois <IP> - Menampilkan informasi tentang IP dari ipwho.is
+                /iproyal <IP> - Menampilkan informasi tentang IP dari iproyal.com
+                `;
+                await sock.sendMessage(msg.key.remoteJid, { text: menuMessage });
+                break;
+            }
+            case text.startsWith('/ipwhois'): {
+                const ip = text.split(' ')[1]; // Ambil IP setelah /ipwhois
                 if (!ip) {
-                    await sock.sendMessage(msg.key.remoteJid, { text: 'Silakan masukkan IP setelah /getip. Contoh: /getip 8.8.8.8' });
+                    await sock.sendMessage(msg.key.remoteJid, { text: 'Silakan masukkan IP setelah /ipwhois. Contoh: /ipwhois 8.8.8.8' });
                     break;
                 }
 
                 try {
                     const response = await axios.get(`http://ipwho.is/${ip}`);
                     const data = response.data;
-                    console.log(data);
                     
                     let replyMessage = `IP : ${data.ip}\nContinent/Benua : ${data.continent}\nCode Benua : ${data.continent_code}\nCountry/Negara : ${data.country}\nCode Negara : ${data.country_code}\nRegion : ${data.region}\nCity : ${data.city}\nLatitude : ${data.latitude}\nLongitude : ${data.longitude}\nPostal Code : ${data.postal}\nASN : ${data.connection?.asn || 'N/A'}`;
                     
@@ -60,16 +74,56 @@ async function startBot() {
                         await sock.sendMessage(msg.key.remoteJid, { text: replyMessage });
                     } else {
                         await sock.sendMessage(msg.key.remoteJid, { text: 'IP tidak ditemukan.' });
-                        console.log('IP tidak ditemukan.');
                     }
                 } catch (error) {
-                    console.error('Error handling message:', error);
+                    console.error('Error saat menangani pesan:', error);
+                }
+                break;
+            }
+            case text.startsWith('/iproyal'): {
+                const ip = text.split(' ')[1]; // Ambil IP setelah /iproyal
+                if (!ip) {
+                    await sock.sendMessage(msg.key.remoteJid, { text: 'Silakan masukkan IP setelah /iproyal. Contoh: /iproyal 8.8.8.8' });
+                    break;
+                }
+
+                try {
+                    const res = await axios.get(`https://iproyal.com/ip-lookup/?ip=${ip}`);
+                    const $ = cheerio.load(res.data);
+                    const infoDivs = $('div.hero-bg-container > section.pb-40 > section.w-full > div.gap-x-20 > div.flex-row');
+
+                    let result = [];
+
+                    // Iterasi melalui setiap div dan ambil informasi yang dibutuhkan
+                    infoDivs.each(function () {
+                        const titleElements = $(this).find('div.font-semibold');
+                        const valueElements = $(this).find('div.text-right');
+
+                        if (titleElements.length === valueElements.length) {
+                            titleElements.each(function (index) {
+                                const title = $(this).text().trim().replace(/:/g, '');
+                                const value = $(valueElements[index]).text().trim();
+                                if (title && value) {
+                                    result.push({ title: title, value: value });
+                                }
+                            });
+                        }
+                    });
+
+                    let replyMessage = result.map(item => `${item.title}: ${item.value}`).join('\n');
+
+                    if (replyMessage) {
+                        await sock.sendMessage(msg.key.remoteJid, { text: replyMessage });
+                    } else {
+                        await sock.sendMessage(msg.key.remoteJid, { text: 'IP tidak ditemukan.' });
+                    }
+                } catch (error) {
+                    console.error('Error saat menangani pesan:', error);
                 }
                 break;
             }
             default: {
-                // Jika pesan tidak mengandung "/getip"
-                //await sock.sendMessage(msg.key.remoteJid, { text: 'GUNAKAN */getip* untuk menggunakan fitur getip.' });
+                // Tidak melakukan apa-apa jika perintah tidak dikenal
                 break;
             }
         }
