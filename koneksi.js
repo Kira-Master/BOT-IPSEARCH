@@ -51,6 +51,13 @@ async function startBot() {
         // Gunakan switch untuk menangani pesan
         switch (true) {
             case text.startsWith('/menu'): {
+            const cpu = os.cpus()[0].model;
+                const osType = os.type();
+                const totalMem = os.totalmem();
+                const freeMem = os.freemem();
+                const usedMem = totalMem - freeMem;
+                const ramUsage = (usedMem / totalMem * 100).toFixed(2);
+                
                 const menuMessage = `
 *Menu Fitur Bot:*
 /ipwhois <IP> - Menampilkan informasi tentang IP dari ipwho.is
