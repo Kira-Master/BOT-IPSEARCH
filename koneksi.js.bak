@@ -50,22 +50,17 @@ async function startBot() {
         switch (true) {
             case text.startsWith('/menu'): {
                 const menuMessage = `
-*Menu Fitur Bot:*
-/ipwhois <IP> - Menampilkan informasi tentang IP dari ipwho.is
-/iproyal <IP> - Menampilkan informasi tentang IP dari iproyal.com
-Informasi Server:
-- OS: ${osType}
-- CPU: ${cpu}
-- Total RAM: ${(totalMem / (1024 * 1024)).toFixed(2)} MB
-- Memori Terpakai: ${(usedMem / (1024 * 1024)).toFixed(2)} MB (${ramUsage}%)
-- Memori Tersisa: ${(freeMem / (1024 * 1024)).toFixed(2)} MB`;
-                await sock.sendMessage(msg.key.remoteJid, { text: menuMessage, quoted: msg });
+                *Menu Fitur Bot:*
+                /ipwhois <IP> - Menampilkan informasi tentang IP dari ipwho.is
+                /iproyal <IP> - Menampilkan informasi tentang IP dari iproyal.com
+                `;
+                await sock.sendMessage(msg.key.remoteJid, { text: menuMessage });
                 break;
             }
             case text.startsWith('/ipwhois'): {
                 const ip = text.split(' ')[1]; // Ambil IP setelah /ipwhois
                 if (!ip) {
-                    await sock.sendMessage(msg.key.remoteJid, { text: 'Silakan masukkan IP setelah /ipwhois. Contoh: /ipwhois 8.8.8.8', quoted: msg });
+                    await sock.sendMessage(msg.key.remoteJid, { text: 'Silakan masukkan IP setelah /ipwhois. Contoh: /ipwhois 8.8.8.8' });
                     break;
                 }
 
@@ -76,9 +71,9 @@ Informasi Server:
                     let replyMessage = `IP : ${data.ip}\nContinent/Benua : ${data.continent}\nCode Benua : ${data.continent_code}\nCountry/Negara : ${data.country}\nCode Negara : ${data.country_code}\nRegion : ${data.region}\nCity : ${data.city}\nLatitude : ${data.latitude}\nLongitude : ${data.longitude}\nPostal Code : ${data.postal}\nASN : ${data.connection?.asn || 'N/A'}`;
                     
                     if (data.success) {
-                        await sock.sendMessage(msg.key.remoteJid, { text: replyMessage, quoted: msg });
+                        await sock.sendMessage(msg.key.remoteJid, { text: replyMessage });
                     } else {
-                        await sock.sendMessage(msg.key.remoteJid, { text: 'IP tidak ditemukan.', quoted: msg });
+                        await sock.sendMessage(msg.key.remoteJid, { text: 'IP tidak ditemukan.' });
                     }
                 } catch (error) {
                     console.error('Error saat menangani pesan:', error);
@@ -88,7 +83,7 @@ Informasi Server:
             case text.startsWith('/iproyal'): {
                 const ip = text.split(' ')[1]; // Ambil IP setelah /iproyal
                 if (!ip) {
-                    await sock.sendMessage(msg.key.remoteJid, { text: 'Silakan masukkan IP setelah /iproyal. Contoh: /iproyal 8.8.8.8', quoted: msg });
+                    await sock.sendMessage(msg.key.remoteJid, { text: 'Silakan masukkan IP setelah /iproyal. Contoh: /iproyal 8.8.8.8' });
                     break;
                 }
 
@@ -118,7 +113,7 @@ Informasi Server:
                     let replyMessage = result.map(item => `${item.title}: ${item.value}`).join('\n');
 
                     if (replyMessage) {
-                        await sock.sendMessage(msg.key.remoteJid, { text: replyMessage, quoted: msg });
+                        await sock.sendMessage(msg.key.remoteJid, { text: replyMessage });
                     } else {
                         await sock.sendMessage(msg.key.remoteJid, { text: 'IP tidak ditemukan.' });
                     }
