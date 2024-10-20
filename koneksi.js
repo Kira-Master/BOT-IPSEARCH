@@ -3,6 +3,8 @@ import { Boom } from '@hapi/boom';
 import axios from 'axios';
 import qr from 'qrcode-terminal';
 import * as cheerio from 'cheerio';
+import os from 'os';
+import osu from 'os-utils';
 
 async function startBot() {
     const { state, saveCreds } = await useMultiFileAuthState('./auth_info');
